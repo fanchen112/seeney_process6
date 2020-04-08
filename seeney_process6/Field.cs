@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace seeney_process6
 {
+    /// <summary>
+    /// 缺陷参数配置
+    /// </summary>
     public class CrackConfig
     {
         public long crackTypes;
@@ -38,6 +41,9 @@ namespace seeney_process6
 
     }
 
+    /// <summary>
+    /// 分类参数配置
+    /// </summary>
     public class SortConfig
     {
 
@@ -63,10 +69,30 @@ namespace seeney_process6
     {
         public string proname;
         public string createtime;
-        public int protype;
+        public int protype;//0:弱像素分割；1：大分类
+        public int totalmodelnum;
+        public OneProject()
+        {
+            totalmodelnum = 1;
+        }
     }
 
+    public class OneModel
+    {
+        public int CurrentModel;
+        public string procreatetime;//对应 OneProject.createtime
+        public string modelcreatetime;
+        public string trainbegintime;
+        public string trainendtime;
+    }
+
+    
+    /// <summary>
+    /// 缺陷标记json对象
+    /// </summary>
+    #region
     public class Shapes
+
     {
         public List<SiPoint> shape = new List<SiPoint>();
     }
@@ -83,15 +109,21 @@ namespace seeney_process6
         public int X4;
         public int Y4;
     }
+    #endregion
+
+    /// <summary>
+    /// 全项目字段
+    /// </summary>
     class Field
     {
         private static string nowProCreateTime;
         private static int nowProType = 3;//0：Crack 1:Sort 3：都不是
         private static long nowCrackType = 1;
-        private static string proPath;
-        private static DateTime modelcreatetime;
+        private static string nowproPath;
+        
         private static bool isJiCheng;
-        private static string selectJiCheng;
+        private static int selectmodel;//1、2、3.。。
+        private static int finalmodel;//最后一个model，也是在用的
 
         public string NowProCreateTime
         {
@@ -132,29 +164,16 @@ namespace seeney_process6
             }
         }
 
-        public string ProPath
+        public string NowproPath
         {
             get
             {
-                return proPath;
+                return nowproPath;
             }
 
             set
             {
-                proPath = value;
-            }
-        }
-
-        public DateTime Modelcreatetime
-        {
-            get
-            {
-                return modelcreatetime;
-            }
-
-            set
-            {
-                modelcreatetime = value;
+                nowproPath = value;
             }
         }
 
@@ -171,16 +190,29 @@ namespace seeney_process6
             }
         }
 
-        public string SelectJiCheng
+        public int Selectmodel
         {
             get
             {
-                return selectJiCheng;
+                return selectmodel;
             }
 
             set
             {
-                selectJiCheng = value;
+                selectmodel = value;
+            }
+        }
+
+        public int Finalmodel
+        {
+            get
+            {
+                return finalmodel;
+            }
+
+            set
+            {
+                finalmodel = value;
             }
         }
     }

@@ -36,7 +36,7 @@ namespace seeney_process6
                 LAB_JICheng.Visible = true;
                 COMB_JICheng.Visible = true;
                 string strmodels;
-                using (StreamReader reader = new StreamReader(field.ProPath + "\\models.json"))
+                using (StreamReader reader = new StreamReader(field.NowproPath + "\\" + field.Finalmodel + "\\models.json"))
                 {
                     strmodels = reader.ReadToEnd();
                 }
@@ -85,7 +85,7 @@ namespace seeney_process6
             {
                 if(COMB_JICheng.SelectedIndex!=-1)
                 {
-                    field.SelectJiCheng = COMB_JICheng.SelectedItem.ToString();
+                    //field.SelectJiCheng = COMB_JICheng.SelectedItem.ToString();
                     modeljsons.Clear();
                     for (int i = 0; i < ModelDatas.Rows.Count; i++)
                     {
@@ -97,7 +97,7 @@ namespace seeney_process6
                         modeljsons.Add(onemodeltype);
                     }
                     // File.Create(field.ProPath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\model.json");
-                    using (StreamWriter writer = new StreamWriter(field.ProPath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\model.json"))
+                    using (StreamWriter writer = new StreamWriter(field.NowproPath + "\\" + field.Finalmodel + "\\mode\\model.json"))
                     {
                         writer.Write(Newtonsoft.Json.JsonConvert.SerializeObject(modeljsons, Newtonsoft.Json.Formatting.Indented));
                     }
@@ -125,7 +125,7 @@ namespace seeney_process6
                     modeljsons.Add(onemodeltype);
                 }
                 // File.Create(field.ProPath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\model.json");
-                using (StreamWriter writer = new StreamWriter(field.ProPath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\model.json"))
+                using (StreamWriter writer = new StreamWriter(field.NowproPath + "\\" + field.Finalmodel + "\\model\\model.json"))
                 {
                     writer.Write(Newtonsoft.Json.JsonConvert.SerializeObject(modeljsons, Newtonsoft.Json.Formatting.Indented));
                 }

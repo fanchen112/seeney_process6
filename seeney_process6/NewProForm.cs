@@ -45,17 +45,17 @@ namespace seeney_process6
             }
             else
             {
-                string dirpath = TBX_ProDirPath.Text + "\\" + TBX_ProName.Text;
+                string proPath = TBX_ProDirPath.Text + "\\" + TBX_ProName.Text;
 
-                if (Directory.Exists(dirpath))
+                if (Directory.Exists(proPath))
                 {
                     MessageBox.Show("存在同名文件夹");
                 }
                 else
                 {
-                    Directory.CreateDirectory(dirpath);
-                    Directory.CreateDirectory(dirpath + "\\1");
-                    Directory.CreateDirectory(dirpath + "\\1\\image");
+                    Directory.CreateDirectory( proPath);
+                    Directory.CreateDirectory( proPath + "\\1");
+                    Directory.CreateDirectory( proPath + "\\1\\image");
 
                     OneProject oneproject = new OneProject();
 
@@ -63,7 +63,9 @@ namespace seeney_process6
 
                     oneproject.proname = TBX_ProName.Text;
                     oneproject.createtime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    
                     field.NowProCreateTime = oneproject.createtime;
+                    
 
                     string strconfig = "";
                     if (CBX_CrackType.Checked)
@@ -74,32 +76,32 @@ namespace seeney_process6
 
                         field.NowProType = 0;
                         oneproject.protype = 0;
-                        prodb.AddOnepro(oneproject.proname, dirpath, oneproject.createtime, 0);
+                        prodb.AddOnepro(oneproject.proname,  proPath, oneproject.createtime, 0);
                     }
                     else if (CBX_SortType.Checked)
                     {
 
                         SortConfig sortConfig = new SortConfig();
-                        Directory.CreateDirectory(dirpath + "\\1");
-                        Directory.CreateDirectory(dirpath + "\\1\\image\\DefectImages");
-                        Directory.CreateDirectory(dirpath + "\\1\\image\\NormalImages");
+                        Directory.CreateDirectory( proPath + "\\1");
+                        Directory.CreateDirectory( proPath + "\\1\\image\\DefectImages");
+                        Directory.CreateDirectory( proPath + "\\1\\image\\NormalImages");
 
                         strconfig = Newtonsoft.Json.JsonConvert.SerializeObject(sortConfig, Newtonsoft.Json.Formatting.Indented);
-
                         field.NowProType = 1;
                         oneproject.protype = 1;
 
-                        prodb.AddOnepro(oneproject.proname, dirpath, oneproject.createtime, 1);
+                        prodb.AddOnepro(oneproject.proname,  proPath, oneproject.createtime, 1);
 
                     }
-                    using (StreamWriter writer = new StreamWriter(dirpath + "\\config.json"))
+                    using (StreamWriter writer = new StreamWriter( proPath + "\\1\\config.json"))
                     {
                         writer.Write(strconfig);
                     }
-                    File.Create(dirpath + "\\models.json");
+                    field.NowproPath = proPath;
+                    File.Create( proPath + "\\1\\models.json");
 
                     string projson = Newtonsoft.Json.JsonConvert.SerializeObject(oneproject, Newtonsoft.Json.Formatting.Indented);
-                    using (StreamWriter writer = new StreamWriter(dirpath + "\\project.json"))
+                    using (StreamWriter writer = new StreamWriter( proPath + "\\project.json"))
                     {
                         writer.Write(projson);
                     }

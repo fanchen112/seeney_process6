@@ -58,7 +58,7 @@ namespace seeney_process6
         Graphics g13;
         Graphics g14;
         */
-        string propath;
+        
         int totalpage = 1;
 
         //2019-12-13 增加训练状态变量的输出和控制训练停止的状态量
@@ -781,16 +781,18 @@ namespace seeney_process6
             Thread Crack_childThread = new Thread(new ThreadStart(Crack_CallToChildThread));
             Crack_childThread.IsBackground = true;
             Crack_childThread.Start();
+            
         }
+        
 
         private void Sort_CallToChildThread()
         {
             // augm.Enabled = false;
-            Directory.CreateDirectory(propath + "\\NormalImages");
-            Directory.CreateDirectory(propath + "\\DefectImages");
+            Directory.CreateDirectory( field.NowproPath + "\\NormalImages");
+            Directory.CreateDirectory( field.NowproPath + "\\DefectImages");
 
-            DirectoryInfo dirsrcNorpath = new DirectoryInfo(propath + "\\image\\NormalImages");
-            DirectoryInfo dirsrcDefpath = new DirectoryInfo(propath + "\\image\\DefectImages");
+            DirectoryInfo dirsrcNorpath = new DirectoryInfo( field.NowproPath + "\\image\\NormalImages");
+            DirectoryInfo dirsrcDefpath = new DirectoryInfo( field.NowproPath + "\\image\\DefectImages");
             //  int sum = dirsrcNorpath.GetFiles("*.bmp").Length + dirsrcDefpath.GetFiles("*.bmp").Length;
             //  int procount = 0;
             foreach (FileInfo srcnorfile in dirsrcNorpath.GetFiles("*.bmp"))
@@ -802,7 +804,7 @@ namespace seeney_process6
                 {
                     Mat M = Cv2.GetRotationMatrix2D(center, angle, 1);
                     Cv2.WarpAffine(src, dst, M, src.Size());
-                    Cv2.ImWrite(propath + "\\NormalImages\\" + srcnorfile.Name.Split('.')[0] + "_" + angle + ".bmp", dst);
+                    Cv2.ImWrite( field.NowproPath + "\\NormalImages\\" + srcnorfile.Name.Split('.')[0] + "_" + angle + ".bmp", dst);
                 }
                 //    procount++;
                 //  SortcutProgress = procount / sum * 100;
@@ -818,15 +820,15 @@ namespace seeney_process6
                 {
                     Mat M = Cv2.GetRotationMatrix2D(center, angle, 1);
                     Cv2.WarpAffine(src, dst, M, src.Size());
-                    Cv2.ImWrite(propath + "\\DefectImages\\" + srcdeffile.Name.Split('.')[0] + "_" + angle + ".bmp", dst);
+                    Cv2.ImWrite( field.NowproPath + "\\DefectImages\\" + srcdeffile.Name.Split('.')[0] + "_" + angle + ".bmp", dst);
                 }
 
                 //   procount++;
                 //  SortcutProgress = procount / sum * 100;
                 //  LoadingMsg("正在剪切", SortcutProgress);
             }
-            DirectoryInfo dirdstNorpath = new DirectoryInfo(propath + "\\NormalImages");
-            DirectoryInfo dirdstDefpath = new DirectoryInfo(propath + "\\DefectImages");
+            DirectoryInfo dirdstNorpath = new DirectoryInfo( field.NowproPath + "\\NormalImages");
+            DirectoryInfo dirdstDefpath = new DirectoryInfo( field.NowproPath + "\\DefectImages");
             List<string> imgmesg = new List<string>();
             List<string> miximgmesg = new List<string>();
             Random random = new Random();
@@ -867,10 +869,10 @@ namespace seeney_process6
                 }
             }
 
-            StreamWriter trainwrite = new StreamWriter(propath + "\\train_list.txt");
+            StreamWriter trainwrite = new StreamWriter( field.NowproPath + "\\train_list.txt");
             trainwrite.Write(strtrainlist);
             trainwrite.Dispose();
-            StreamWriter valwrite = new StreamWriter(propath + "\\val_list.txt");
+            StreamWriter valwrite = new StreamWriter( field.NowproPath + "\\val_list.txt");
             valwrite.Write(strvallist);
             valwrite.Dispose();
 
@@ -882,9 +884,10 @@ namespace seeney_process6
             //  MessageBox.Show("剪切成功");
             // MessageBox.Show("剪切成功");
             //重写Crack_ResNet18_train_val.prototxt
-            string strreplace = propath.Replace("\\", "/");
-            File.Copy("Crack_ResNet18_train_val.prototxt", propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\Crack_ResNet18_train_val.prototxt");
-            StreamReader reader = new StreamReader(propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\Crack_ResNet18_train_val.prototxt");
+            
+            string strreplace =  field.NowproPath.Replace("\\", "/");
+            File.Copy("Crack_ResNet18_train_val.prototxt", field.NowproPath + "\\" + field.Finalmodel + "\\model\\Crack_ResNet18_train_val.prototxt");
+            StreamReader reader = new StreamReader(field.NowproPath + "\\" + field.Finalmodel + "\\model\\Crack_ResNet18_train_val.prototxt");
             string strread = reader.ReadToEnd();
             reader.Dispose();
             string[] strresul = Regex.Split(strread, "bottom: \"data\"");
@@ -934,13 +937,13 @@ namespace seeney_process6
 "layer {\r\n" +
 "    bottom: \"data\"";
             strprototxt = strprototxt + strresul[1];
-            StreamWriter prototxtwriter = new StreamWriter(propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\Crack_ResNet18_train_val.prototxt");
+            StreamWriter prototxtwriter = new StreamWriter(field.NowproPath + "\\" + field.Finalmodel + "\\model\\Crack_ResNet18_train_val.prototxt");
             prototxtwriter.Write(strprototxt);
             prototxtwriter.Dispose();
 
             //重写solver.prototxt
-            File.Copy("solver.prototxt", propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\solver.prototxt");
-            StreamWriter solverprot = new StreamWriter(propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\solver.prototxt");
+            File.Copy("solver.prototxt", field.NowproPath + "\\" + field.Finalmodel + "\\model\\solver.prototxt");
+            StreamWriter solverprot = new StreamWriter(field.NowproPath + "\\" + field.Finalmodel + "\\model\\solver.prototxt");
             string str_solverprot = "net: \"Crack_ResNet18_train_val.prototxt\"\r\n" +
 "# 10.1 = 162/16\r\n" +
 "test_iter: 10\r\n" +
@@ -967,7 +970,7 @@ namespace seeney_process6
 "solver_mode: GPU";
             solverprot.Write(str_solverprot);
             solverprot.Dispose();
-            Seeney_Train("", propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\solver.prototxt", "resnet-18_pretrained.caffemodel", false);
+            Seeney_Train("", field.NowproPath + "\\" + field.Finalmodel + "\\model\\solver.prototxt", "resnet-18_pretrained.caffemodel", false);
             MessageBox.Show("分类完成");
 
         }
@@ -1016,12 +1019,12 @@ namespace seeney_process6
 
 
             }
-            using (StreamWriter writer = new StreamWriter(propath + "\\image\\LabelInfos.txt"))
+            using (StreamWriter writer = new StreamWriter( field.NowproPath + "\\image\\LabelInfos.txt"))
             {
                 writer.Write(strlabel);
             }
 
-            Directory.CreateDirectory(propath + "\\train");
+            Directory.CreateDirectory( field.NowproPath + "\\train");
 
             // MessageBox.Show("开始剪切");
             //模型加载状态以滚动条方式显示
@@ -1037,8 +1040,8 @@ namespace seeney_process6
             mWorkThread1.Priority = ThreadPriority.AboveNormal;
             mWorkThread1.IsBackground = true;
             mWorkThread1.Start();
-            Seeney_GetYOLOv3LabeltoDefectsImage(propath + "\\image\\", propath + "\\train");
-            Seeney_GetTrainValLists(propath + "\\train");
+            Seeney_GetYOLOv3LabeltoDefectsImage( field.NowproPath + "\\image\\",  field.NowproPath + "\\train");
+            Seeney_GetTrainValLists( field.NowproPath + "\\train");
             Thread.Sleep(100);
             mWorkThread1.Abort();
             LoadingMsg("正在剪切", 100);
@@ -1047,8 +1050,8 @@ namespace seeney_process6
 
             // MessageBox.Show("剪切完成");
 
-            Directory.CreateDirectory(propath + "\\backup");
-            // Directory.CreateDirectory(propath + "\\model");
+            Directory.CreateDirectory( field.NowproPath + "\\backup");
+            // Directory.CreateDirectory( field.NowproPath + "\\model");
 
             /*
              *  //Crack
@@ -1068,9 +1071,9 @@ namespace seeney_process6
 
             //查询缺陷个数
             //写crack.data
-            //propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss")
-            StreamWriter crackdata = new StreamWriter(propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\crack.data");
-            string strcrackdata = "classes= " + crackConfig.crackTypes + "\r\ntrain  = " + propath + "\\traintrain_crack.txt\r\nvalid  = " + propath + "\\trainval_crack.txt\r\nnames = crack.names\r\nbackup = " + propath + "\\backup\\";
+            // field.NowproPath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss")
+            StreamWriter crackdata = new StreamWriter(field.NowproPath + "\\" + field.Finalmodel + "\\model\\crack.data");
+            string strcrackdata = "classes= " + crackConfig.crackTypes + "\r\ntrain  = " +  field.NowproPath + "\\traintrain_crack.txt\r\nvalid  = " +  field.NowproPath + "\\trainval_crack.txt\r\nnames = crack.names\r\nbackup = " +  field.NowproPath + "\\backup\\";
             crackdata.Write(strcrackdata);
             crackdata.Close();
             int QueTypescount = Convert.ToInt32(crackConfig.crackTypes);
@@ -1078,13 +1081,13 @@ namespace seeney_process6
 
             int filters = QueTypescount * 3 + 15;
 
-            int hangcount = requestMethod(propath + "\\traintrain_crack.txt");
+            int hangcount = requestMethod( field.NowproPath + "\\traintrain_crack.txt");
             int burn_in = hangcount / batch * (int)crackConfig.ShiJianBeiShu;
             max_batches = burn_in * 10;
             int step1 = burn_in * 5;
             int step2 = burn_in * 8;
             //写crack.cfg          
-            // File.Copy("crack.cfg", propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\crack.cfg");
+            // File.Copy("crack.cfg",  field.NowproPath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\crack.cfg");
             StreamWriter crackcfg = new StreamWriter("crack.cfg");
             string strcrackcfg = "[net]\r\n" +
 "# Testing\r\n" +
@@ -1296,14 +1299,14 @@ namespace seeney_process6
 
             timer1.Start();
             canstop = true;
-            Seeney_Train(propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\crack.data", "crack.cfg", "pretrain_tiny.15", false);
+            Seeney_Train(field.NowproPath + "\\" + field.Finalmodel + "\\model\\crack.data", "crack.cfg", "pretrain_tiny.15", false);
             timer1.Stop();
 
             FileInfo crackcfgfile = new FileInfo("crack.cfg");
-            crackcfgfile.CopyTo(propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\crack.cfg");
-            FileInfo crackweightfile = new FileInfo(propath + "\\backup\\crack_final.weights");
-            crackweightfile.CopyTo(propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss") + "\\crack.weights");
-            //  using (StreamWriter writer = new StreamWriter(propath + "\\dst.txt"))
+            crackcfgfile.CopyTo(field.NowproPath + "\\" + field.Finalmodel + "\\model\\crack.cfg");
+            FileInfo crackweightfile = new FileInfo(field.NowproPath + "\\" + field.Finalmodel + "\\backup\\crack_final.weights");
+            crackweightfile.CopyTo(field.NowproPath + "\\" + field.Finalmodel + "\\model\\crack.weights");
+            //  using (StreamWriter writer = new StreamWriter( field.NowproPath + "\\dst.txt"))
             // {
             //     writer.Write(txt);
             // }
@@ -1311,7 +1314,7 @@ namespace seeney_process6
 
         }
 
-        public void SaveConfig()
+        public void SaveConfig(int finalmodel)
         {
             if (LAB_ProType.Text == "弱像素分割项目")
             {
@@ -1326,7 +1329,7 @@ namespace seeney_process6
                 crackConfig.hue = TBX_Hue.Text;
                 crackConfig.learning_rate = TBX_LearRat.Text;
                 crackConfig.ShiJianBeiShu = NUD_TimeMul.DSkinValue;
-                using (StreamWriter writer = new StreamWriter(propath + "\\config.json"))
+                using (StreamWriter writer = new StreamWriter( field.NowproPath + "\\"+finalmodel+"\\config.json"))
                 {
                     writer.Write(Newtonsoft.Json.JsonConvert.SerializeObject(crackConfig, Newtonsoft.Json.Formatting.Indented));
                 }
@@ -1340,7 +1343,7 @@ namespace seeney_process6
                 LAB_height.Text = sortConfig.new_width;
                 sortConfig.new_height = LAB_height.Text;
                 sortConfig.max_iter = CMB_Max_Iter.Text;
-                using (StreamWriter writer = new StreamWriter(propath + "\\config.json"))
+                using (StreamWriter writer = new StreamWriter( field.NowproPath + "\\" + finalmodel + "\\config.json"))
                 {
                     writer.Write(Newtonsoft.Json.JsonConvert.SerializeObject(sortConfig, Newtonsoft.Json.Formatting.Indented));
                 }
@@ -1350,7 +1353,7 @@ namespace seeney_process6
         private void BTN_NewPro_Click(object sender, EventArgs e)
         {
 
-            SaveConfig();
+            SaveConfig(field.Finalmodel);
             //三清
             DrawViewClear();
             g.Clear(Color.White);
@@ -1415,7 +1418,7 @@ namespace seeney_process6
         private void newproshow()
         {
             LAB_ProName.Text = prodb.QueryPromesg(field.NowProType, field.NowProCreateTime).proname;
-            propath = prodb.QueryPromesg(field.NowProType, field.NowProCreateTime).propath;
+            
 
             NUD_CTypeCount.DSkinValue = 1;
             TBX_Batch.Text = "64";
@@ -1466,8 +1469,7 @@ namespace seeney_process6
 
         private void BTN_ImpPro_Click(object sender, EventArgs e)
         {
-
-            SaveConfig();
+            SaveConfig(field.Finalmodel);
             OpenFileDialog projson = new OpenFileDialog();
             projson.Filter = "|project.json";
             if (projson.ShowDialog() == DialogResult.OK)
@@ -1476,14 +1478,13 @@ namespace seeney_process6
                 using (StreamReader reader = new StreamReader(projson.FileName))
                 {
                     onproject = Newtonsoft.Json.JsonConvert.DeserializeObject<OneProject>(reader.ReadToEnd());
-
                 }
 
                  field.NowProType = onproject.protype;
                  field.NowProCreateTime = onproject.createtime;
-
-                propath = prodb.QueryPromesg(field.NowProType, field.NowProCreateTime).propath;
-                DirectoryInfo imagepath = new DirectoryInfo(propath + "\\image");
+                 field.NowproPath = prodb.QueryPromesg(field.NowProType, field.NowProCreateTime).propath;
+                 field.Finalmodel = onproject.totalmodelnum;
+                DirectoryInfo imagepath = new DirectoryInfo(field.NowproPath + "\\"+field.Finalmodel+"\\image");
                 if (onproject.protype == 0)
                 {
                     CBX_NG.Visible = false;
@@ -1492,22 +1493,10 @@ namespace seeney_process6
                     TOG_CanLabel.Visible = true;
                     dSkinTabControl1.SelectedIndex = 0;
                     LAB_ProType.Text = "弱像素分割项目";
-
-
-
                     CansellistCag = false;
-
-
-
-
-
-                    using (StreamReader reader = new StreamReader(propath + "\\config.json"))
+                    using (StreamReader reader = new StreamReader(field.NowproPath + "\\" + field.Finalmodel + "\\config.json"))
                     {
-
                         crackConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<CrackConfig>(reader.ReadToEnd());
-
-                       
-
                     }
                     NUD_CTypeCount.DSkinValue = crackConfig.crackTypes;
                     TBX_Batch.Text = crackConfig.batch;
@@ -1601,9 +1590,6 @@ namespace seeney_process6
 
                         }
 
-
-
-
                         DrawView();
 
                         kuangregion = new Region();
@@ -1621,15 +1607,9 @@ namespace seeney_process6
                         LAB_TolPage.Text = "共" + ((cbmpfiles.Length - 1) / 14 + 1) + "页";
 
                     }
-
-
-
-
-
                     checkedListBox1.Items.Clear();
                     foreach (var i in cbmpfiles)
                     {
-
                         if (File.Exists(i.FullName.Split('.')[0] + ".json"))
                         {
                             checkedListBox1.Items.Add(i.Name, true);
@@ -1648,7 +1628,7 @@ namespace seeney_process6
 
 
                         oldindex = selectindex;
-                        selecturl = propath + "\\image\\" + checkedListBox1.SelectedItem;
+                        selecturl = field.NowproPath + "\\"+field.Finalmodel+"\\image\\" + checkedListBox1.SelectedItem;
                         selectimage = Image.FromFile(selecturl);
                         canvas.Left = ImageLocation(selectimage, Panel_mid).Left;
                         canvas.Top = ImageLocation(selectimage, Panel_mid).Top;
@@ -1656,7 +1636,7 @@ namespace seeney_process6
                         canvas.Height = ImageLocation(selectimage, Panel_mid).Height;
                         // canvas.Image = selectimage;
                         g.DrawImage(selectimage, 0, 0, canvas.Width, canvas.Height);
-                        selectjson = propath + "\\image\\" + checkedListBox1.SelectedItem.ToString().Split('.')[0] + ".json";
+                        selectjson = field.NowproPath + "\\" + field.Finalmodel + "\\image\\" + checkedListBox1.SelectedItem.ToString().Split('.')[0] + ".json";
                         if (File.Exists(selectjson))
                         {
                             using (StreamReader reader = new StreamReader(selectjson))
@@ -1686,8 +1666,8 @@ namespace seeney_process6
                         //  augm.Enabled = true;
 
 
-                        LAB_TotalNum.Text = "总" + new DirectoryInfo(propath + "\\image").GetFiles("*.bmp").Length + "张";
-                        LAB_LabelNum.Text = "标记" + new DirectoryInfo(propath + "\\image").GetFiles("*.json").Length + "张";
+                        LAB_TotalNum.Text = "总" + new DirectoryInfo(field.NowproPath + "\\" + field.Finalmodel + "\\image").GetFiles("*.bmp").Length + "张";
+                        LAB_LabelNum.Text = "标记" + new DirectoryInfo(field.NowproPath + "\\" + field.Finalmodel + "\\image").GetFiles("*.json").Length + "张";
                         CansellistCag = true;
                     }
 
@@ -1702,12 +1682,11 @@ namespace seeney_process6
                     LAB_CanDrawTips.Visible = false;
                     TOG_CanLabel.Visible = false;
                     dSkinTabControl1.SelectedIndex = 1;
-
+  
                     CansellistCag = false;
                     //ff
 
-
-                    using (StreamReader reader = new StreamReader(propath + "\\config.json"))
+                    using (StreamReader reader = new StreamReader(field.NowproPath + "\\" + field.Finalmodel + "\\config.json"))
                     {
 
                         sortConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<SortConfig>(reader.ReadToEnd());
@@ -1727,7 +1706,7 @@ namespace seeney_process6
                     List<FileInfo> SortAllImage = new List<FileInfo>();
 
                     checkedListBox1.Items.Clear();
-                    spath = new DirectoryInfo(propath + "\\image");
+                    spath = new DirectoryInfo(field.NowproPath + "\\" + field.Finalmodel + "\\image");
                     FileInfo[] files = spath.GetFiles("*.bmp");
 
                     foreach (var i in files)
@@ -1735,14 +1714,14 @@ namespace seeney_process6
                         SortAllImage.Add(i);
                         checkedListBox1.Items.Add(i.Name, CheckState.Unchecked);
                     }
-                    npath = new DirectoryInfo(propath + "\\image\\NormalImages");
+                    npath = new DirectoryInfo(field.NowproPath + "\\" + field.Finalmodel + "\\image\\NormalImages");
                     FileInfo[] nfiles = npath.GetFiles("*.bmp");
                     foreach (var i in nfiles)
                     {
                         SortAllImage.Add(i);
                         checkedListBox1.Items.Add(i.Name, CheckState.Checked);
                     }
-                    dpath = new DirectoryInfo(propath + "\\image\\DefectImages");
+                    dpath = new DirectoryInfo(field.NowproPath + "\\" + field.Finalmodel + "\\DefectImages");
                     FileInfo[] dfiles = dpath.GetFiles("*.bmp");
                     foreach (var i in dfiles)
                     {
@@ -1864,7 +1843,7 @@ namespace seeney_process6
                         oldindex = selectindex;
                         if (checkedListBox1.GetItemCheckState(selectindex) == CheckState.Indeterminate)
                         {
-                            selecturl = propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem;
+                            selecturl = field.NowproPath + "\\" + field.Finalmodel + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem;
                             CBX_NG.Checked = true;
                             CBX_OK.Checked = false;
 
@@ -1880,7 +1859,7 @@ namespace seeney_process6
                         {
                             CBX_NG.Checked = false;
                             CBX_OK.Checked = true;
-                            selecturl = propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem;
+                            selecturl = field.NowproPath + "\\" + field.Finalmodel + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem;
                             selectimage = Image.FromFile(selecturl);
                             canvas.Left = ImageLocation(selectimage, Panel_mid).Left;
                             canvas.Top = ImageLocation(selectimage, Panel_mid).Top;
@@ -1894,7 +1873,7 @@ namespace seeney_process6
 
                             CBX_NG.Checked = false;
                             CBX_OK.Checked = false;
-                            selecturl = propath + "\\image\\" + checkedListBox1.SelectedItem;
+                            selecturl = field.NowproPath + "\\" + field.Finalmodel + "\\image\\" + checkedListBox1.SelectedItem;
                             selectimage = Image.FromFile(selecturl);
                             canvas.Left = ImageLocation(selectimage, Panel_mid).Left;
                             canvas.Top = ImageLocation(selectimage, Panel_mid).Top;
@@ -1906,8 +1885,8 @@ namespace seeney_process6
 
                     }
 
-                    LAB_TotalNum.Text = "未标" + new DirectoryInfo(propath + "\\image").GetFiles("*.bmp").Length + "张";
-                    LAB_LabelNum.Text = "良品" + new DirectoryInfo(propath + "\\image\\NormalImages").GetFiles("*.bmp").Length + "张 不良" + new DirectoryInfo(propath + "\\image\\DefectImages").GetFiles("*.bmp").Length + "张";
+                    LAB_TotalNum.Text = "未标" + new DirectoryInfo(field.NowproPath + "\\" + field.Finalmodel + "\\image").GetFiles("*.bmp").Length + "张";
+                    LAB_LabelNum.Text = "良品" + new DirectoryInfo(field.NowproPath + "\\" + field.Finalmodel + "\\image\\NormalImages").GetFiles("*.bmp").Length + "张 不良" + new DirectoryInfo(field.NowproPath + "\\" + field.Finalmodel + "\\image\\DefectImages").GetFiles("*.bmp").Length + "张";
 
                     CansellistCag = true;
 
@@ -2318,11 +2297,11 @@ namespace seeney_process6
                 bool oldisEmpty = false;
                 if (field.NowProType == 0)
                 {
-                    oldisEmpty = new DirectoryInfo(propath + "\\image").GetFiles("*.bmp").Length == 0;
+                    oldisEmpty = new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.bmp").Length == 0;
                 }
                 else if (field.NowProType == 1)
                 {
-                    oldisEmpty = new DirectoryInfo(propath + "\\image").GetFiles("*.bmp").Length == 0 && new DirectoryInfo(propath + "\\image\\NormalImages").GetFiles("*.bmp").Length == 0 && new DirectoryInfo(propath + "\\image\\DefectImages").GetFiles("*.bmp").Length == 0;
+                    oldisEmpty = new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.bmp").Length == 0 && new DirectoryInfo( field.NowproPath + "\\image\\NormalImages").GetFiles("*.bmp").Length == 0 && new DirectoryInfo( field.NowproPath + "\\image\\DefectImages").GetFiles("*.bmp").Length == 0;
                 }
 
                 OpenFileDialog importimages = new OpenFileDialog();
@@ -2339,7 +2318,7 @@ namespace seeney_process6
                     {
                         count++;
                         string afterpicname = DateTime.Now.ToString("yyyyMMddHHmmss") + "_" + count + ".bmp";
-                        new FileInfo(i).CopyTo(propath + "\\image\\" + afterpicname);
+                        new FileInfo(i).CopyTo( field.NowproPath + "\\image\\" + afterpicname);
                         checkedListBox1.Items.Add(afterpicname);
                     }
 
@@ -2356,7 +2335,7 @@ namespace seeney_process6
 
 
                     oldindex = selectindex;
-                    selecturl = propath + "\\image\\" + checkedListBox1.SelectedItem;
+                    selecturl =  field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem;
                     selectimage = Image.FromFile(selecturl);
                     canvas.Left = ImageLocation(selectimage, Panel_mid).Left;
                     canvas.Top = ImageLocation(selectimage, Panel_mid).Top;
@@ -2370,12 +2349,12 @@ namespace seeney_process6
                 if (field.NowProType == 0)
                 {
 
-                    LAB_TotalNum.Text = "总" + new DirectoryInfo(propath + "\\image").GetFiles("*.bmp").Length + "张";
+                    LAB_TotalNum.Text = "总" + new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.bmp").Length + "张";
                 }
                 else if (field.NowProType == 1)
                 {
                     candraw = false;
-                    LAB_TotalNum.Text = "未标" + new DirectoryInfo(propath + "\\image").GetFiles("*.bmp").Length + "张";
+                    LAB_TotalNum.Text = "未标" + new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.bmp").Length + "张";
                 }
 
 
@@ -2395,7 +2374,7 @@ namespace seeney_process6
             {
 
 
-                System.Diagnostics.Process.Start("explorer.exe", propath);
+                System.Diagnostics.Process.Start("explorer.exe",  field.NowproPath);
 
 
             }
@@ -2420,7 +2399,7 @@ namespace seeney_process6
                 {
                     if (LAB_ProType.Text == "弱像素分割项目")
                     {
-                        selectjson = propath + "\\image\\" + checkedListBox1.SelectedItem.ToString().Split('.')[0] + ".json";
+                        selectjson =  field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString().Split('.')[0] + ".json";
                         if (shapes.shape.Count != 0)
                         {
                             using (StreamWriter writer = new StreamWriter(selectjson))
@@ -2443,14 +2422,14 @@ namespace seeney_process6
                         selectindex--;
                         oldindex = selectindex;
                         checkedListBox1.SelectedItem = checkedListBox1.Items[selectindex];
-                        selecturl = propath + "\\image\\" + checkedListBox1.SelectedItem;
+                        selecturl =  field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem;
                         selectimage = Image.FromFile(selecturl);
                         // canvas.Left = ImageLocation(selectimage, panel3).Left;
                         // canvas.Top = ImageLocation(selectimage, panel3).Top;
                         // canvas.Width = ImageLocation(selectimage, panel3).Width;
                         // canvas.Height = ImageLocation(selectimage, panel3).Height;
                         g.DrawImage(selectimage, 0, 0, canvas.Width, canvas.Height);
-                        selectjson = propath + "\\image\\" + checkedListBox1.SelectedItem.ToString().Split('.')[0] + ".json";
+                        selectjson =  field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString().Split('.')[0] + ".json";
                         if (File.Exists(selectjson))
                         {
                             using (StreamReader reader = new StreamReader(selectjson))
@@ -2486,8 +2465,8 @@ namespace seeney_process6
                         canTextEvent = false;
                         TBX_NowPageNum.Text = nowpagenum.ToString();
                         canTextEvent = true;
-                        LAB_TotalNum.Text = "总" + new DirectoryInfo(propath + "\\image").GetFiles("*.bmp").Length + "张";
-                        LAB_LabelNum.Text = "标记" + new DirectoryInfo(propath + "\\image").GetFiles("*.json").Length + "张";
+                        LAB_TotalNum.Text = "总" + new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.bmp").Length + "张";
+                        LAB_LabelNum.Text = "标记" + new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.json").Length + "张";
 
 
                     }
@@ -2497,13 +2476,13 @@ namespace seeney_process6
                         selectimage.Dispose();
                         if (CBX_OK.Checked)
                         {
-                            if (File.Exists(propath + "\\image\\" + checkedListBox1.SelectedItem.ToString()))
+                            if (File.Exists( field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString()))
                             {
-                                File.Move(propath + "\\image\\" + checkedListBox1.SelectedItem.ToString(), propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString());
+                                File.Move( field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString(),  field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString());
                             }
-                            else if (File.Exists(propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString()))
+                            else if (File.Exists( field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString()))
                             {
-                                File.Move(propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString(), propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString());
+                                File.Move( field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString(),  field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString());
                             }
 
                             checkedListBox1.SetItemCheckState(selectindex, CheckState.Checked);
@@ -2512,13 +2491,13 @@ namespace seeney_process6
                         }
                         else if (CBX_OK.Checked)
                         {
-                            if (File.Exists(propath + "\\image\\" + checkedListBox1.SelectedItem.ToString()))
+                            if (File.Exists( field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString()))
                             {
-                                File.Move(propath + "\\image\\" + checkedListBox1.SelectedItem.ToString(), propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString());
+                                File.Move( field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString(),  field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString());
                             }
-                            else if (File.Exists(propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString()))
+                            else if (File.Exists( field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString()))
                             {
-                                File.Move(propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString(), propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString());
+                                File.Move( field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString(),  field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString());
                             }
                             checkedListBox1.SetItemCheckState(selectindex, CheckState.Indeterminate);
                         }
@@ -2535,9 +2514,9 @@ namespace seeney_process6
                         oldindex = selectindex;
                         checkedListBox1.SelectedItem = checkedListBox1.Items[selectindex];
 
-                        if (File.Exists(propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString()))
+                        if (File.Exists( field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString()))
                         {
-                            selecturl = propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString();
+                            selecturl =  field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString();
                             selectimage = Image.FromFile(selecturl);
                             // canvas.Left = ImageLocation(selectimage, panel3).Left;
                             //  canvas.Top = ImageLocation(selectimage, panel3).Top;
@@ -2549,9 +2528,9 @@ namespace seeney_process6
                             CBX_NG.Checked = false;
 
                         }
-                        else if (File.Exists(propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString()))
+                        else if (File.Exists( field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString()))
                         {
-                            selecturl = propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem;
+                            selecturl =  field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem;
                             selectimage = Image.FromFile(selecturl);
                             // canvas.Left = ImageLocation(selectimage, panel3).Left;
                             //  canvas.Top = ImageLocation(selectimage, panel3).Top;
@@ -2566,9 +2545,9 @@ namespace seeney_process6
                             CBX_OK.Checked = false;
 
                         }
-                        else if (File.Exists(propath + "\\image\\" + checkedListBox1.SelectedItem.ToString()))
+                        else if (File.Exists( field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString()))
                         {
-                            selecturl = propath + "\\image\\" + checkedListBox1.SelectedItem;
+                            selecturl =  field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem;
                             selectimage = Image.FromFile(selecturl);
                             // canvas.Left = ImageLocation(selectimage, panel3).Left;
                             // canvas.Top = ImageLocation(selectimage, panel3).Top;
@@ -2599,8 +2578,8 @@ namespace seeney_process6
 
 
 
-                        LAB_TotalNum.Text = "未标" + new DirectoryInfo(propath + "\\image").GetFiles("*.bmp").Length + "张";
-                        LAB_LabelNum.Text = "良品" + new DirectoryInfo(propath + "\\image\\NormalImages").GetFiles("*.bmp").Length + "张 不良" + new DirectoryInfo(propath + "\\image\\DefectImages").GetFiles("*.bmp").Length + "张";
+                        LAB_TotalNum.Text = "未标" + new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.bmp").Length + "张";
+                        LAB_LabelNum.Text = "良品" + new DirectoryInfo( field.NowproPath + "\\image\\NormalImages").GetFiles("*.bmp").Length + "张 不良" + new DirectoryInfo( field.NowproPath + "\\image\\DefectImages").GetFiles("*.bmp").Length + "张";
 
 
 
@@ -2631,7 +2610,7 @@ namespace seeney_process6
                 {
                     if (LAB_ProType.Text == "弱像素分割项目")
                     {
-                        selectjson = propath + "\\image\\" + checkedListBox1.SelectedItem.ToString().Split('.')[0] + ".json";
+                        selectjson =  field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString().Split('.')[0] + ".json";
                         if (shapes.shape.Count != 0)
                         {
                             using (StreamWriter writer = new StreamWriter(selectjson))
@@ -2654,14 +2633,14 @@ namespace seeney_process6
                         selectindex++;
                         oldindex = selectindex;
                         checkedListBox1.SelectedItem = checkedListBox1.Items[selectindex];
-                        selecturl = propath + "\\image\\" + checkedListBox1.SelectedItem;
+                        selecturl =  field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem;
                         selectimage = Image.FromFile(selecturl);
                         // canvas.Left = ImageLocation(selectimage, panel3).Left;
                         // canvas.Top = ImageLocation(selectimage, panel3).Top;
                         // canvas.Width = ImageLocation(selectimage, panel3).Width;
                         // canvas.Height = ImageLocation(selectimage, panel3).Height;
                         g.DrawImage(selectimage, 0, 0, canvas.Width, canvas.Height);
-                        selectjson = propath + "\\image\\" + checkedListBox1.SelectedItem.ToString().Split('.')[0] + ".json";
+                        selectjson =  field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString().Split('.')[0] + ".json";
                         if (File.Exists(selectjson))
                         {
                             using (StreamReader reader = new StreamReader(selectjson))
@@ -2696,8 +2675,8 @@ namespace seeney_process6
                         canTextEvent = false;
                         TBX_NowPageNum.Text = nowpagenum.ToString();
                         canTextEvent = true;
-                        LAB_TotalNum.Text = "总" + new DirectoryInfo(propath + "\\image").GetFiles("*.bmp").Length + "张";
-                        LAB_LabelNum.Text = "标记" + new DirectoryInfo(propath + "\\image").GetFiles("*.json").Length + "张";
+                        LAB_TotalNum.Text = "总" + new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.bmp").Length + "张";
+                        LAB_LabelNum.Text = "标记" + new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.json").Length + "张";
                     }
                     else if (LAB_ProType.Text == "大分类项目")
                     {
@@ -2705,13 +2684,13 @@ namespace seeney_process6
                         selectimage.Dispose();
                         if (CBX_OK.Checked)
                         {
-                            if (File.Exists(propath + "\\image\\" + checkedListBox1.SelectedItem.ToString()))
+                            if (File.Exists( field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString()))
                             {
-                                File.Move(propath + "\\image\\" + checkedListBox1.SelectedItem.ToString(), propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString());
+                                File.Move( field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString(),  field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString());
                             }
-                            else if (File.Exists(propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString()))
+                            else if (File.Exists( field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString()))
                             {
-                                File.Move(propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString(), propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString());
+                                File.Move( field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString(),  field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString());
                             }
 
                             checkedListBox1.SetItemCheckState(selectindex, CheckState.Checked);
@@ -2720,13 +2699,13 @@ namespace seeney_process6
                         }
                         else if (CBX_NG.Checked)
                         {
-                            if (File.Exists(propath + "\\image\\" + checkedListBox1.SelectedItem.ToString()))
+                            if (File.Exists( field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString()))
                             {
-                                File.Move(propath + "\\image\\" + checkedListBox1.SelectedItem.ToString(), propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString());
+                                File.Move( field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString(),  field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString());
                             }
-                            else if (File.Exists(propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString()))
+                            else if (File.Exists( field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString()))
                             {
-                                File.Move(propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString(), propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString());
+                                File.Move( field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString(),  field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString());
                             }
                             checkedListBox1.SetItemCheckState(selectindex, CheckState.Indeterminate);
                         }
@@ -2743,9 +2722,9 @@ namespace seeney_process6
                         oldindex = selectindex;
                         checkedListBox1.SelectedItem = checkedListBox1.Items[selectindex];
 
-                        if (File.Exists(propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString()))
+                        if (File.Exists( field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString()))
                         {
-                            selecturl = propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString();
+                            selecturl =  field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString();
                             selectimage = Image.FromFile(selecturl);
                             // canvas.Left = ImageLocation(selectimage, panel3).Left;
                             //  canvas.Top = ImageLocation(selectimage, panel3).Top;
@@ -2757,9 +2736,9 @@ namespace seeney_process6
                             CBX_NG.Checked = false;
 
                         }
-                        else if (File.Exists(propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString()))
+                        else if (File.Exists( field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString()))
                         {
-                            selecturl = propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem;
+                            selecturl =  field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem;
                             selectimage = Image.FromFile(selecturl);
                             // canvas.Left = ImageLocation(selectimage, panel3).Left;
                             //  canvas.Top = ImageLocation(selectimage, panel3).Top;
@@ -2771,9 +2750,9 @@ namespace seeney_process6
                             CBX_OK.Checked = false;
 
                         }
-                        else if (File.Exists(propath + "\\image\\" + checkedListBox1.SelectedItem.ToString()))
+                        else if (File.Exists( field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString()))
                         {
-                            selecturl = propath + "\\image\\" + checkedListBox1.SelectedItem;
+                            selecturl =  field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem;
                             selectimage = Image.FromFile(selecturl);
                             // canvas.Left = ImageLocation(selectimage, panel3).Left;
                             // canvas.Top = ImageLocation(selectimage, panel3).Top;
@@ -2804,8 +2783,8 @@ namespace seeney_process6
 
 
 
-                        LAB_TotalNum.Text = "未标" + new DirectoryInfo(propath + "\\image").GetFiles("*.bmp").Length + "张";
-                        LAB_LabelNum.Text = "良品" + new DirectoryInfo(propath + "\\image\\NormalImages").GetFiles("*.bmp").Length + "张 不良" + new DirectoryInfo(propath + "\\image\\DefectImages").GetFiles("*.bmp").Length + "张";
+                        LAB_TotalNum.Text = "未标" + new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.bmp").Length + "张";
+                        LAB_LabelNum.Text = "良品" + new DirectoryInfo( field.NowproPath + "\\image\\NormalImages").GetFiles("*.bmp").Length + "张 不良" + new DirectoryInfo( field.NowproPath + "\\image\\DefectImages").GetFiles("*.bmp").Length + "张";
 
 
 
@@ -2827,7 +2806,7 @@ namespace seeney_process6
             {
                 if (shapes.shape.Count != 0)
                 {
-                    selectjson = propath + "\\image\\" + checkedListBox1.SelectedItem.ToString().Split('.')[0] + ".json";
+                    selectjson =  field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString().Split('.')[0] + ".json";
                     using (StreamWriter writer = new StreamWriter(selectjson))
                     {
                         writer.Write(Newtonsoft.Json.JsonConvert.SerializeObject(shapes));
@@ -2847,8 +2826,8 @@ namespace seeney_process6
                         File.Delete(selectjson);
                     }
                 }
-                LAB_TotalNum.Text = "总" + new DirectoryInfo(propath + "\\image").GetFiles("*.bmp").Length + "张";
-                LAB_LabelNum.Text = "标记" + new DirectoryInfo(propath + "\\image").GetFiles("*.json").Length + "张";
+                LAB_TotalNum.Text = "总" + new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.bmp").Length + "张";
+                LAB_LabelNum.Text = "标记" + new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.json").Length + "张";
                 MessageBox.Show("已保存");
             }
 
@@ -2873,22 +2852,25 @@ namespace seeney_process6
                         g.DrawLine(Pens.Red, i.X4 * canvas.Width / selectimage.Width, i.Y4 * canvas.Width / selectimage.Width, i.X1 * canvas.Width / selectimage.Width, i.Y1 * canvas.Width / selectimage.Width);
                     }
                 }
-                LAB_TotalNum.Text = "总" + new DirectoryInfo(propath + "\\image").GetFiles("*.bmp").Length + "张";
-                LAB_LabelNum.Text = "标记" + new DirectoryInfo(propath + "\\image").GetFiles("*.json").Length + "张";
+                LAB_TotalNum.Text = "总" + new DirectoryInfo(field.NowproPath + "\\" + field.Finalmodel + "\\image").GetFiles("*.bmp").Length + "张";
+                LAB_LabelNum.Text = "标记" + new DirectoryInfo(field.NowproPath + "\\" + field.Finalmodel + "\\image").GetFiles("*.json").Length + "张";
             }
         }
 
-        List<DateTime> models = new List<DateTime>();
+        OneModel onemodel = new OneModel();
         private void BTN_Train_Click(object sender, EventArgs e)
         {
             //models = new List<DateTime>();
             //models.Clear();
-            field.ProPath = propath;
-            field.Modelcreatetime = DateTime.Now;
+            onemodel.modelcreatetime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            field.Finalmodel++;
+            //field. field.NowproPath =  field.NowproPath;
+            //field. = DateTime.Now;
+            /*
             if (field.NowProType==0||field.NowProType ==1)
             {
                 string strmodels;
-                using (StreamReader reader = new StreamReader(propath + "\\models.json"))
+                using (StreamReader reader = new StreamReader(field.NowproPath + "\\" + field.Finalmodel + "\\models.json"))
                 {
                     strmodels = reader.ReadToEnd();
                 }
@@ -2899,7 +2881,7 @@ namespace seeney_process6
                 }
             }
            
-
+    */
 
 
 
@@ -2955,37 +2937,37 @@ namespace seeney_process6
                             Panel_Kuang.Region = kuangregion;
 
 
-                            if (Directory.Exists(propath + "\\train"))
+                            if (Directory.Exists(field.NowproPath + "\\" + field.Finalmodel + "\\train"))
                             {
-                                Directory.Delete(propath + "\\train", true);
+                                Directory.Delete(field.NowproPath + "\\" + field.Finalmodel + "\\train", true);
                             }
-                            if (Directory.Exists(propath + "\\backup"))
+                            if (Directory.Exists(field.NowproPath + "\\" + field.Finalmodel + "\\backup"))
                             {
-                                Directory.Delete(propath + "\\backup", true);
-                            }
-
-
-                            Directory.CreateDirectory(propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss"));
-                            models.Add(field.Modelcreatetime);
-                            using (StreamWriter writer1 = new StreamWriter(propath + "\\models.json"))
-                            {
-                                writer1.Write(Newtonsoft.Json.JsonConvert.SerializeObject(models, Newtonsoft.Json.Formatting.Indented));
+                                Directory.Delete(field.NowproPath + "\\" + field.Finalmodel + "\\backup", true);
                             }
 
-                            //if (Directory.Exists(propath + "\\model"))
+
+                            Directory.CreateDirectory(field.NowproPath + "\\" + field.Finalmodel + "\\model");
+                           // models.Add(field.Modelcreatetime);
+                          //  using (StreamWriter writer1 = new StreamWriter( field.NowproPath + "\\models.json"))
+                           // {
+                            //    writer1.Write(Newtonsoft.Json.JsonConvert.SerializeObject(models, Newtonsoft.Json.Formatting.Indented));
+                           // }
+
+                            //if (Directory.Exists( field.NowproPath + "\\model"))
                             //{
-                            //  Directory.Delete(propath + "\\model", true);
+                            //  Directory.Delete( field.NowproPath + "\\model", true);
                             //}
 
-                            if (File.Exists(propath + "\\traintrain_crack.txt"))
+                            if (File.Exists(field.NowproPath + "\\" + field.Finalmodel + "\\traintrain_crack.txt"))
                             {
-                                File.Delete(propath + "\\traintrain_crack.txt");
+                                File.Delete(field.NowproPath + "\\" + field.Finalmodel + "\\traintrain_crack.txt");
                             }
-                            if (File.Exists(propath + "\\trainval_crack.txt"))
+                            if (File.Exists(field.NowproPath + "\\" + field.Finalmodel + "\\trainval_crack.txt"))
                             {
-                                File.Delete(propath + "\\trainval_crack.txt");
+                                File.Delete(field.NowproPath + "\\" + field.Finalmodel + "\\trainval_crack.txt");
                             }
-                            DirectoryInfo info = new DirectoryInfo(propath + "\\image");
+                            DirectoryInfo info = new DirectoryInfo(field.NowproPath + "\\" + field.Finalmodel + "\\image");
                             json = info.GetFiles("*.json");
                             if (json.Length == 0)
                             {
@@ -2993,7 +2975,7 @@ namespace seeney_process6
                             }
                             else
                             {
-                                using (StreamWriter writer = new StreamWriter(propath + "\\config.json"))
+                                using (StreamWriter writer = new StreamWriter(field.NowproPath + "\\" + field.Finalmodel + "\\config.json"))
                                 {
                                     writer.Write(Newtonsoft.Json.JsonConvert.SerializeObject(crackConfig, Newtonsoft.Json.Formatting.Indented));
                                 }
@@ -3040,37 +3022,37 @@ namespace seeney_process6
                             Panel_Kuang.Region = kuangregion;
 
 
-                            if (Directory.Exists(propath + "\\train"))
+                            if (Directory.Exists(field.NowproPath + "\\" + field.Finalmodel + "\\train"))
                             {
-                                Directory.Delete(propath + "\\train", true);
+                                Directory.Delete(field.NowproPath + "\\" + field.Finalmodel + "\\train", true);
                             }
-                            if (Directory.Exists(propath + "\\backup"))
+                            if (Directory.Exists(field.NowproPath + "\\" + field.Finalmodel + "\\backup"))
                             {
-                                Directory.Delete(propath + "\\backup", true);
-                            }
-
-
-                            Directory.CreateDirectory(propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss"));
-                            models.Add(field.Modelcreatetime);
-                            using (StreamWriter writer1 = new StreamWriter(propath + "\\models.json"))
-                            {
-                                writer1.Write(Newtonsoft.Json.JsonConvert.SerializeObject(models, Newtonsoft.Json.Formatting.Indented));
+                                Directory.Delete(field.NowproPath + "\\" + field.Finalmodel + "\\backup", true);
                             }
 
-                            //if (Directory.Exists(propath + "\\model"))
+
+                            Directory.CreateDirectory(field.NowproPath + "\\" + field.Finalmodel + "\\model");
+                            //models.Add(field.Modelcreatetime);
+                            //using (StreamWriter writer1 = new StreamWriter( field.NowproPath + "\\models.json"))
                             //{
-                            //  Directory.Delete(propath + "\\model", true);
+                            //    writer1.Write(Newtonsoft.Json.JsonConvert.SerializeObject(models, Newtonsoft.Json.Formatting.Indented));
                             //}
 
-                            if (File.Exists(propath + "\\traintrain_crack.txt"))
+                            //if (Directory.Exists( field.NowproPath + "\\model"))
+                            //{
+                            //  Directory.Delete( field.NowproPath + "\\model", true);
+                            //}
+
+                            if (File.Exists(field.NowproPath + "\\" + field.Finalmodel + "\\traintrain_crack.txt"))
                             {
-                                File.Delete(propath + "\\traintrain_crack.txt");
+                                File.Delete(field.NowproPath + "\\" + field.Finalmodel + "\\traintrain_crack.txt");
                             }
-                            if (File.Exists(propath + "\\trainval_crack.txt"))
+                            if (File.Exists(field.NowproPath + "\\" + field.Finalmodel + "\\trainval_crack.txt"))
                             {
-                                File.Delete(propath + "\\trainval_crack.txt");
+                                File.Delete(field.NowproPath + "\\" + field.Finalmodel + "\\trainval_crack.txt");
                             }
-                            DirectoryInfo info = new DirectoryInfo(propath + "\\image");
+                            DirectoryInfo info = new DirectoryInfo(field.NowproPath + "\\" + field.Finalmodel + "\\image");
                             json = info.GetFiles("*.json");
                             if (json.Length == 0)
                             {
@@ -3078,7 +3060,7 @@ namespace seeney_process6
                             }
                             else
                             {
-                                using (StreamWriter writer = new StreamWriter(propath + "\\config.json"))
+                                using (StreamWriter writer = new StreamWriter(field.NowproPath + "\\" + field.Finalmodel + "\\config.json"))
                                 {
                                     writer.Write(Newtonsoft.Json.JsonConvert.SerializeObject(crackConfig, Newtonsoft.Json.Formatting.Indented));
                                 }
@@ -3123,32 +3105,32 @@ namespace seeney_process6
                             int preangle = Convert.ToInt32(sortConfig.angle);
                             if (preangle > 0 && preangle < 180)
                             {
-                                if (Directory.Exists(propath + "\\NormalImages"))
+                                if (Directory.Exists(field.NowproPath + "\\" + field.Finalmodel + "\\NormalImages"))
                                 {
-                                    Directory.Delete(propath + "\\NormalImages", true);
+                                    Directory.Delete(field.NowproPath + "\\" + field.Finalmodel + "\\NormalImages", true);
                                 }
-                                if (Directory.Exists(propath + "\\DefectImages"))
+                                if (Directory.Exists(field.NowproPath + "\\" + field.Finalmodel + "\\DefectImages"))
                                 {
-                                    Directory.Delete(propath + "\\DefectImages", true);
+                                    Directory.Delete(field.NowproPath + "\\" + field.Finalmodel + "\\DefectImages", true);
                                 }
-                                if (File.Exists(propath + "\\train_list.txt"))
+                                if (File.Exists(field.NowproPath + "\\" + field.Finalmodel + "\\train_list.txt"))
                                 {
-                                    File.Delete(propath + "\\train_list.txt");
+                                    File.Delete(field.NowproPath + "\\" + field.Finalmodel + "\\train_list.txt");
                                 }
-                                if (File.Exists(propath + "\\val_list.txt"))
+                                if (File.Exists(field.NowproPath + "\\" + field.Finalmodel + "\\val_list.txt"))
                                 {
-                                    File.Delete(propath + "\\val_list.txt");
+                                    File.Delete(field.NowproPath + "\\" + field.Finalmodel + "\\val_list.txt");
                                 }
-                                using (StreamWriter writer = new StreamWriter(propath + "\\config.json"))
+                                using (StreamWriter writer = new StreamWriter( field.NowproPath + "\\config.json"))
                                 {
                                     writer.Write(Newtonsoft.Json.JsonConvert.SerializeObject(sortConfig, Newtonsoft.Json.Formatting.Indented));
                                 }
-                                Directory.CreateDirectory(propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss"));
-                                models.Add(field.Modelcreatetime);
-                                using (StreamWriter writer1 = new StreamWriter(propath + "\\models.json"))
-                                {
-                                    writer1.Write(Newtonsoft.Json.JsonConvert.SerializeObject(models, Newtonsoft.Json.Formatting.Indented));
-                                }
+                                Directory.CreateDirectory(field.NowproPath + "\\" + field.Finalmodel + "\\model");
+                                //models.Add(field.Modelcreatetime);
+                                //using (StreamWriter writer1 = new StreamWriter( field.NowproPath + "\\models.json"))
+                               // {
+                               //     writer1.Write(Newtonsoft.Json.JsonConvert.SerializeObject(models, Newtonsoft.Json.Formatting.Indented));
+                              //  }
                                 ModelConfig modelConfig4 = new ModelConfig();
                                 modelConfig4.Event_megCommit += new ModelConfig.delegate_megCommit(modelConfiged4);
                                 //deftypes.Event_CrackTypeshow += new Deftypes.delegate_CrackTypeshow(CrackTypeshow);
@@ -3184,32 +3166,32 @@ namespace seeney_process6
                             int preangle = Convert.ToInt32(sortConfig.angle);
                             if (preangle > 0 && preangle < 180)
                             {
-                                if (Directory.Exists(propath + "\\NormalImages"))
+                                if (Directory.Exists( field.NowproPath + "\\NormalImages"))
                                 {
-                                    Directory.Delete(propath + "\\NormalImages", true);
+                                    Directory.Delete( field.NowproPath + "\\NormalImages", true);
                                 }
-                                if (Directory.Exists(propath + "\\DefectImages"))
+                                if (Directory.Exists( field.NowproPath + "\\DefectImages"))
                                 {
-                                    Directory.Delete(propath + "\\DefectImages", true);
+                                    Directory.Delete( field.NowproPath + "\\DefectImages", true);
                                 }
-                                if (File.Exists(propath + "\\train_list.txt"))
+                                if (File.Exists( field.NowproPath + "\\train_list.txt"))
                                 {
-                                    File.Delete(propath + "\\train_list.txt");
+                                    File.Delete( field.NowproPath + "\\train_list.txt");
                                 }
-                                if (File.Exists(propath + "\\val_list.txt"))
+                                if (File.Exists( field.NowproPath + "\\val_list.txt"))
                                 {
-                                    File.Delete(propath + "\\val_list.txt");
+                                    File.Delete( field.NowproPath + "\\val_list.txt");
                                 }
-                                using (StreamWriter writer = new StreamWriter(propath + "\\config.json"))
+                                using (StreamWriter writer = new StreamWriter( field.NowproPath + "\\config.json"))
                                 {
                                     writer.Write(Newtonsoft.Json.JsonConvert.SerializeObject(sortConfig, Newtonsoft.Json.Formatting.Indented));
                                 }
-                                Directory.CreateDirectory(propath + "\\model_" + field.Modelcreatetime.ToString("yyyyMMddHHmmss"));
-                                models.Add(field.Modelcreatetime);
-                                using (StreamWriter writer1 = new StreamWriter(propath + "\\models.json"))
-                                {
-                                    writer1.Write(Newtonsoft.Json.JsonConvert.SerializeObject(models, Newtonsoft.Json.Formatting.Indented));
-                                }
+                                Directory.CreateDirectory(field.NowproPath + "\\" + field.Finalmodel + "\\model");
+                              //  models.Add(field.Modelcreatetime);
+                               // using (StreamWriter writer1 = new StreamWriter( field.NowproPath + "\\models.json"))
+                               // {
+                               //     writer1.Write(Newtonsoft.Json.JsonConvert.SerializeObject(models, Newtonsoft.Json.Formatting.Indented));
+                              //  }
                                 ModelConfig modelConfig2 = new ModelConfig();
                                 modelConfig2.Event_megCommit += new ModelConfig.delegate_megCommit(modelConfiged2);
                                 //deftypes.Event_CrackTypeshow += new Deftypes.delegate_CrackTypeshow(CrackTypeshow);
@@ -3495,7 +3477,7 @@ namespace seeney_process6
                 if (LAB_ProType.Text == "弱像素分割项目")
                 {
 
-                    selectjson = propath + "\\image\\" + checkedListBox1.Items[oldindex].ToString().Split('.')[0] + ".json";
+                    selectjson =  field.NowproPath + "\\image\\" + checkedListBox1.Items[oldindex].ToString().Split('.')[0] + ".json";
                     if (shapes.shape.Count != 0)
                     {
                         using (StreamWriter writer = new StreamWriter(selectjson))
@@ -3517,14 +3499,14 @@ namespace seeney_process6
                     shapes.shape.Clear();
                     selectindex = checkedListBox1.SelectedIndex;
                     oldindex = selectindex;
-                    selecturl = propath + "\\image\\" + checkedListBox1.SelectedItem;
+                    selecturl =  field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem;
                     selectimage = Image.FromFile(selecturl);
                     // canvas.Left = ImageLocation(selectimage, panel3).Left;
                     // canvas.Top = ImageLocation(selectimage, panel3).Top;
                     // canvas.Width = ImageLocation(selectimage, panel3).Width;
                     // canvas.Height = ImageLocation(selectimage, panel3).Height;
                     g.DrawImage(selectimage, 0, 0, canvas.Width, canvas.Height);
-                    selectjson = propath + "\\image\\" + checkedListBox1.SelectedItem.ToString().Split('.')[0] + ".json";
+                    selectjson =  field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString().Split('.')[0] + ".json";
                     if (File.Exists(selectjson))
                     {
                         using (StreamReader reader = new StreamReader(selectjson))
@@ -3559,8 +3541,8 @@ namespace seeney_process6
                     TBX_NowPageNum.Text = nowpagenum.ToString();
                     canTextEvent = true;
 
-                    LAB_TotalNum.Text = "总" + new DirectoryInfo(propath + "\\image").GetFiles("*.bmp").Length + "张";
-                    LAB_LabelNum.Text = "标记" + new DirectoryInfo(propath + "\\image").GetFiles("*.json").Length + "张";
+                    LAB_TotalNum.Text = "总" + new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.bmp").Length + "张";
+                    LAB_LabelNum.Text = "标记" + new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.json").Length + "张";
 
 
                 }
@@ -3570,13 +3552,13 @@ namespace seeney_process6
                     selectimage.Dispose();
                     if (CBX_OK.Checked)
                     {
-                        if (File.Exists(propath + "\\image\\" + checkedListBox1.Items[oldindex]))
+                        if (File.Exists( field.NowproPath + "\\image\\" + checkedListBox1.Items[oldindex]))
                         {
-                            File.Move(propath + "\\image\\" + checkedListBox1.Items[oldindex], propath + "\\image\\NormalImages\\" + checkedListBox1.Items[oldindex]);
+                            File.Move( field.NowproPath + "\\image\\" + checkedListBox1.Items[oldindex],  field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.Items[oldindex]);
                         }
-                        else if (File.Exists(propath + "\\image\\DefectImages\\" + checkedListBox1.Items[oldindex]))
+                        else if (File.Exists( field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.Items[oldindex]))
                         {
-                            File.Move(propath + "\\image\\DefectImages\\" + checkedListBox1.Items[oldindex], propath + "\\image\\NormalImages\\" + checkedListBox1.Items[oldindex]);
+                            File.Move( field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.Items[oldindex],  field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.Items[oldindex]);
                         }
 
                         checkedListBox1.SetItemCheckState(oldindex, CheckState.Checked);
@@ -3585,13 +3567,13 @@ namespace seeney_process6
                     }
                     else if (CBX_NG.Checked)
                     {
-                        if (File.Exists(propath + "\\image\\" + checkedListBox1.Items[oldindex]))
+                        if (File.Exists( field.NowproPath + "\\image\\" + checkedListBox1.Items[oldindex]))
                         {
-                            File.Move(propath + "\\image\\" + checkedListBox1.Items[oldindex], propath + "\\image\\DefectImages\\" + checkedListBox1.Items[oldindex]);
+                            File.Move( field.NowproPath + "\\image\\" + checkedListBox1.Items[oldindex],  field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.Items[oldindex]);
                         }
-                        else if (File.Exists(propath + "\\image\\NormalImages\\" + checkedListBox1.Items[oldindex]))
+                        else if (File.Exists( field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.Items[oldindex]))
                         {
-                            File.Move(propath + "\\image\\NormalImages\\" + checkedListBox1.Items[oldindex], propath + "\\image\\DefectImages\\" + checkedListBox1.Items[oldindex]);
+                            File.Move( field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.Items[oldindex],  field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.Items[oldindex]);
                         }
                         checkedListBox1.SetItemCheckState(oldindex, CheckState.Indeterminate);
                     }
@@ -3603,9 +3585,9 @@ namespace seeney_process6
                     oldindex = selectindex;
 
 
-                    if (File.Exists(propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString()))
+                    if (File.Exists( field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString()))
                     {
-                        selecturl = propath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString();
+                        selecturl =  field.NowproPath + "\\image\\NormalImages\\" + checkedListBox1.SelectedItem.ToString();
                         selectimage = Image.FromFile(selecturl);
                         // canvas.Left = ImageLocation(selectimage, panel3).Left;
                         // canvas.Top = ImageLocation(selectimage, panel3).Top;
@@ -3617,9 +3599,9 @@ namespace seeney_process6
                         CBX_NG.Checked = false;
 
                     }
-                    else if (File.Exists(propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString()))
+                    else if (File.Exists( field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem.ToString()))
                     {
-                        selecturl = propath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem;
+                        selecturl =  field.NowproPath + "\\image\\DefectImages\\" + checkedListBox1.SelectedItem;
                         selectimage = Image.FromFile(selecturl);
                         //  canvas.Left = ImageLocation(selectimage, panel3).Left;
                         // canvas.Top = ImageLocation(selectimage, panel3).Top;
@@ -3631,9 +3613,9 @@ namespace seeney_process6
                         CBX_OK.Checked = false;
 
                     }
-                    else if (File.Exists(propath + "\\image\\" + checkedListBox1.SelectedItem.ToString()))
+                    else if (File.Exists( field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem.ToString()))
                     {
-                        selecturl = propath + "\\image\\" + checkedListBox1.SelectedItem;
+                        selecturl =  field.NowproPath + "\\image\\" + checkedListBox1.SelectedItem;
                         selectimage = Image.FromFile(selecturl);
                         // canvas.Left = ImageLocation(selectimage, panel3).Left;
                         // canvas.Top = ImageLocation(selectimage, panel3).Top;
@@ -3646,8 +3628,8 @@ namespace seeney_process6
 
 
                     }
-                    LAB_TotalNum.Text = "未标" + new DirectoryInfo(propath + "\\image").GetFiles("*.bmp").Length + "张";
-                    LAB_LabelNum.Text = "良品" + new DirectoryInfo(propath + "\\image\\NormalImages").GetFiles("*.bmp").Length + "张 不良" + new DirectoryInfo(propath + "\\image\\DefectImages").GetFiles("*.bmp").Length + "张";
+                    LAB_TotalNum.Text = "未标" + new DirectoryInfo( field.NowproPath + "\\image").GetFiles("*.bmp").Length + "张";
+                    LAB_LabelNum.Text = "良品" + new DirectoryInfo( field.NowproPath + "\\image\\NormalImages").GetFiles("*.bmp").Length + "张 不良" + new DirectoryInfo( field.NowproPath + "\\image\\DefectImages").GetFiles("*.bmp").Length + "张";
 
                 }
 
@@ -4031,7 +4013,7 @@ namespace seeney_process6
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            SaveConfig();
+            SaveConfig(field.Finalmodel);
         }
 
        
